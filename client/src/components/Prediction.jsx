@@ -39,7 +39,7 @@ const Prediction = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/predict",
+        "https://diabetest.onrender.com/predict",
         userInput
       );
       console.log("Response data:", response.data);
