@@ -39,6 +39,10 @@ def predict(Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, Bmi, Dp
     
     return result
 
+@app.route('/')
+def home():
+    return "🩺 SugarSafe API is live. Use the /predict endpoint to POST your data."
+
 @app.route('/predict', methods=['POST'])
 def predictions():
     if request.method == 'POST':
