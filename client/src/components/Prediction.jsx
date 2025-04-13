@@ -21,6 +21,22 @@ const Prediction = () => {
   const [showBMICalculator, setShowBMICalculator] = useState(false);
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
+  const [currentTooltip, setCurrentTooltip] = useState("");
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+  // Normal ranges for each parameter
+  const normalRanges = {
+    Age: "Normal range: Any age can be affected, but risk increases after 45 years",
+    Pregnancies: "Normal range: 0-5 (for women), but higher numbers may indicate increased risk",
+    Glucose: "Normal range: 70-99 mg/dL (fasting), <140 mg/dL (2 hours after eating)",
+    BloodPressure: "Normal range: <120/80 mmHg (optimal), 120-129/<80 mmHg (elevated)",
+    Insulin: "Normal range: 2.6-24.9 μU/mL (fasting)",
+    BMI: "Normal range: 18.5-24.9 (healthy weight), 25-29.9 (overweight), 30+ (obese)",
+    SkinThickness: "Normal range: 10-40 mm (varies by age, gender, and body composition)",
+    DPF: "Higher values indicate stronger family history of diabetes",
+    HrsSleep: "Normal range: 7-9 hours per night for adults",
+    Cholesterol: "Normal range: <200 mg/dL (desirable), 200-239 mg/dL (borderline high), 240+ mg/dL (high)"
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,17 +48,16 @@ const Prediction = () => {
     
     if (!allFieldsFilled) {
       setShowErrorPopup(true);
-      setTimeout(() => setShowErrorPopup(false), 3000); // Hide after 3 seconds
+      setTimeout(() => setShowErrorPopup(false), 3000);
       return;
     }
 
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "https://diabetest.onrender.com/predict",
+        "http://127.0.0.1:8000/predict",
         userInput
       );
-      console.log("Response data:", response.data);
       setPrediction(response.data);
     } catch (error) {
       console.error("Error:", error);
@@ -61,7 +76,25 @@ const Prediction = () => {
   }, []);
 
   const handleChange = (e) => {
-    setUserInput({ ...userInput, [e.target.name]: e.target.value });
+    const value = e.target.value;
+    // Only allow numbers and empty string, no + or - signs
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setUserInput({ ...userInput, [e.target.name]: value });
+    }
+  };
+
+  const handleHeightChange = (e) => {
+    const value = e.target.value;
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setHeight(value);
+    }
+  };
+
+  const handleWeightChange = (e) => {
+    const value = e.target.value;
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setWeight(value);
+    }
   };
 
   const calculateBMI = () => {
@@ -71,6 +104,19 @@ const Prediction = () => {
       setUserInput({ ...userInput, BMI: bmiValue });
       setShowBMICalculator(false);
     }
+  };
+
+  const handleFocus = (e, fieldName) => {
+    setCurrentTooltip(normalRanges[fieldName]);
+    const inputRect = e.target.getBoundingClientRect();
+    setTooltipPosition({
+      x: inputRect.left + window.scrollX,
+      y: inputRect.top + window.scrollY - 10
+    });
+  };
+
+  const handleBlur = () => {
+    setCurrentTooltip("");
   };
 
   return (
@@ -87,65 +133,91 @@ const Prediction = () => {
         </motion.div>
       )}
 
+      {/* Normal Range Tooltip */}
+      {currentTooltip && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          style={{
+            position: 'absolute',
+            left: `${tooltipPosition.x}px`,
+            top: `${tooltipPosition.y}px`,
+            transform: 'translateY(-100%)',
+          }}
+          className="bg-white text-gray-800 px-3 py-2 rounded-md shadow-lg z-50 max-w-xs text-sm border border-gray-200"
+        >
+          {currentTooltip}
+          <div 
+            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full w-0 h-0 
+            border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-white"
+          ></div>
+        </motion.div>
+      )}
+
+      {/* BMI Calculator Modal */}
       {showBMICalculator && (
-  <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-    <motion.div 
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.9, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      style={{ borderRadius: '10px' }} // Inline style to guarantee border radius
-      className="bg-white w-full max-w-md p-6 shadow-xl border border-gray-200 overflow-hidden" // Added overflow-hidden
-    >
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">BMI Calculator</h2>
-        <button 
-          onClick={() => setShowBMICalculator(false)}
-          style={{ borderRadius: '10px' }}
-          className="text-gray-500 hover:text-gray-700 p-1 hover:bg-gray-100 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      
-      <div className="space-y-4">
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Height (cm)</label>
-          <input
-            type="number"
-            value={height}
-            onChange={(e) => setHeight(e.target.value)}
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             style={{ borderRadius: '10px' }}
-            className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter height in cm"
-          />
+            className="bg-white w-full max-w-md p-6 shadow-xl border border-gray-200 overflow-hidden"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">BMI Calculator</h2>
+              <button 
+                onClick={() => setShowBMICalculator(false)}
+                style={{ borderRadius: '10px' }}
+                className="text-gray-500 hover:text-gray-700 p-1 hover:bg-gray-100 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Height (cm)</label>
+                <input
+                  type="number"
+                  value={height}
+                  onChange={handleHeightChange}
+                  min="0"
+                  style={{ borderRadius: '10px' }}
+                  className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter height in cm"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 font-medium mb-1">Weight (kg)</label>
+                <input
+                  type="number"
+                  value={weight}
+                  onChange={handleWeightChange}
+                  min="0"
+                  style={{ borderRadius: '10px' }}
+                  className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter weight in kg"
+                />
+              </div>
+              
+              <button
+                onClick={calculateBMI}
+                style={{ borderRadius: '10px' }}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 transition duration-200 shadow-md"
+              >
+                Calculate BMI
+              </button>
+            </div>
+          </motion.div>
         </div>
-        
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Weight (kg)</label>
-          <input
-            type="number"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-            style={{ borderRadius: '10px' }}
-            className="w-full px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter weight in kg"
-          />
-        </div>
-        
-        <button
-          onClick={calculateBMI}
-          style={{ borderRadius: '10px' }}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 transition duration-200 shadow-md"
-        >
-          Calculate BMI
-        </button>
-      </div>
-    </motion.div>
-  </div>
-)}
+      )}
+
       <div className="flex flex-col sm:flex-row items-center justify-center w-full">
         <motion.div
           initial={{ opacity: 0, x: -150 }}
@@ -165,166 +237,197 @@ const Prediction = () => {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="Age"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    Age
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">Age</label>
                   <input
                     type="number"
                     name="Age"
                     value={userInput.Age}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "Age")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="Pregnancies"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    Pregnancies
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">Pregnancies</label>
                   <input
                     type="number"
                     name="Pregnancies"
                     value={userInput.Pregnancies}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "Pregnancies")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="Glucose"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    Glucose
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">Glucose</label>
                   <input
                     type="number"
                     name="Glucose"
                     value={userInput.Glucose}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "Glucose")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="BloodPressure"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    Blood Pressure
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">Blood Pressure</label>
                   <input
                     type="number"
                     name="BloodPressure"
                     value={userInput.BloodPressure}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "BloodPressure")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="Cholesterol"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    Cholesterol
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">Cholesterol</label>
                   <input
                     type="number"
                     name="Cholesterol"
                     value={userInput.Cholesterol}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "Cholesterol")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
               </div>
               <div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="Insulin"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    Insulin
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">Insulin</label>
                   <input
                     type="number"
                     name="Insulin"
                     value={userInput.Insulin}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "Insulin")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="BMI"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    BMI
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">BMI</label>
                   <input
                     type="number"
                     name="BMI"
                     value={userInput.BMI}
                     onChange={handleChange}
                     onClick={() => setShowBMICalculator(true)}
+                    onFocus={(e) => handleFocus(e, "BMI")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     required
                     readOnly
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="SkinThickness"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    Skin Thickness
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">Skin Thickness</label>
                   <input
                     type="number"
                     name="SkinThickness"
                     value={userInput.SkinThickness}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "SkinThickness")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="DPF"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    DPF
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">DPF</label>
                   <input
                     type="number"
                     name="DPF"
                     value={userInput.DPF}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "DPF")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    step="0.001"
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="HrsSleep"
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    Hours of Sleep
-                  </label>
+                <div className="mb-4 relative">
+                  <label className="block text-gray-700 font-bold mb-2">Hours of Sleep</label>
                   <input
                     type="number"
                     name="HrsSleep"
                     value={userInput.HrsSleep}
                     onChange={handleChange}
+                    onFocus={(e) => handleFocus(e, "HrsSleep")}
+                    onBlur={handleBlur}
+                    min="0"
+                    onKeyDown={(e) => {
+                      if (['+', '-', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -395,7 +498,7 @@ const Prediction = () => {
                 <li><strong>Glucose:</strong> Plasma glucose concentration after a 2-hour oral glucose tolerance test. High glucose levels are a primary indicator of diabetes.</li>
                 <li><strong>Blood Pressure:</strong> Diastolic blood pressure (mm Hg). High blood pressure is associated with an increased risk of diabetes and its complications.</li>
                 <li><strong>Insulin:</strong> 2-Hour serum insulin (mu U/ml). Abnormal insulin levels can be a sign of insulin resistance, a condition often associated with diabetes.</li>
-                <li><strong>BMI:</strong> Body Mass Index (weight in kg/(height in m)^2). Higher BMI values indicate obesity, which is a major risk factor for diabetes.</li>
+                <li><strong>BMI:</strong> Body Mass Index (weight in kg/(height in cm/100)^2). Higher BMI values indicate obesity, which is a major risk factor for diabetes.</li>
                 <li><strong>Skin Thickness:</strong> Triceps skin fold thickness (mm). This measure can indicate body fat distribution, which is related to diabetes risk.</li>
                 <li><strong>DPF:</strong> Diabetes Pedigree Function. This function estimates the genetic impact on diabetes by considering family history, helping to understand hereditary risk.</li>
                 <li><strong>Cholesterol:</strong> The cholesterol level of the patient. High cholesterol levels are associated with an increased risk of diabetes and cardiovascular complications.</li>
