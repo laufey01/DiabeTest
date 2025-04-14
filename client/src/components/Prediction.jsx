@@ -232,7 +232,7 @@ const Prediction = () => {
           className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 sm:p-6 md:p-8 w-full sm:w-auto"
         >
           <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
-            Enter all details
+            Enter Parameter
           </h1>
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
