@@ -537,65 +537,57 @@ const Prediction = () => {
           )}
           {prediction && !isLoading && (
             <div className="bg-white p-6 rounded-lg shadow-lg mx-4 sm:mx-0 mt-4 sm:mt-0 w-full max-w-3xl">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Prediction Result</h2>
               <div className="flex flex-col items-center">
                 <p className={`font-bold text-2xl mb-4 text-center ${
                   prediction.prediction.includes("high chances") 
                     ? "text-red-600" 
                     : "text-green-600"
                 }`}>
-                  {prediction && !isLoading && (
-                <div className="bg-white p-6 rounded-lg shadow-lg mx-4 sm:mx-0 mt-4 sm:mt-0 w-full max-w-3xl">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Prediction Result</h2>
-                  <div className="flex flex-col items-center">
-                    <p className={`font-bold text-2xl mb-4 text-center ${
-                      prediction.prediction.includes("high chances") 
-                        ? "text-red-600" 
-                        : "text-green-600"
-                    }`}>
-                      {prediction.prediction || "No prediction available"}
-                    </p>
-                    
-                    {prediction.donut_chart && (
-                      <div className="mb-6 w-64 h-64 flex items-center justify-center">
-                        <img 
-                          src={prediction.donut_chart} 
-                          alt="Probability donut chart" 
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
+                  {prediction.prediction || "No prediction available"}
+                </p>
+                
+                {prediction.donut_chart && (
+                  <div className="mb-6 w-64 h-64 flex items-center justify-center">
+                    <img 
+                      src={prediction.donut_chart} 
+                      alt="Probability donut chart" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+                
+                <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                  <div 
+                    className={`h-4 rounded-full ${
+                      prediction.probability > 50 
+                        ? "bg-red-500" 
+                        : "bg-green-500"
+                    }`} 
+                    style={{ width: `${prediction.probability}%` }}
+                  ></div>
+                </div>
+                
+                <p className="text-lg font-medium text-gray-700">
+                  Probability: <span className="font-bold">{prediction.probability}%</span>
+                </p>
+                
+                <div className="mt-6 text-center text-gray-700">
+                  <p className="mb-2">
+                    {prediction.prediction.includes("high chances") ? (
+                      <>
+                        <span className="font-semibold">Recommendation:</span> Please consult with a healthcare professional for further evaluation and guidance.
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-semibold">Recommendation:</span> Continue maintaining a healthy lifestyle with balanced diet and regular exercise.
+                      </>
                     )}
-                    
-                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-                      <div 
-                        className={`h-4 rounded-full ${
-                          prediction.probability > 50 
-                            ? "bg-red-500" 
-                            : "bg-green-500"
-                        }`} 
-                        style={{ width: `${prediction.probability}%` }}
-                      ></div>
-                    </div>
-                    
-                    <p className="text-lg font-medium text-gray-700">
-                      Probability: <span className="font-bold">{prediction.probability}%</span>
-                    </p>
-                    
-                    <div className="mt-6 text-center text-gray-700">
-                      <p className="mb-2">
-                        {prediction.prediction.includes("high chances") ? (
-                          <>
-                            <span className="font-semibold">Recommendation:</span> Please consult with a healthcare professional for further evaluation and guidance.
-                          </>
-                        ) : (
-                          <>
-                            <span className="font-semibold">Recommendation:</span> Continue maintaining a healthy lifestyle with balanced diet and regular exercise.
-                          </>
-                        )}
-        </p>
-      </div>
-    </div>
-  </div>
-)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
