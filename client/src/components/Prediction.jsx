@@ -537,7 +537,7 @@ const Prediction = () => {
           )}
           {prediction && !isLoading && (
             <div className="bg-white p-6 rounded-lg shadow-lg mx-4 sm:mx-0 mt-4 sm:mt-0 w-full max-w-3xl">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Prediction Result</h2>
+              <h2 className="text-2xl font-bold text-blue-600 mb-4 text-center">Prediction Result</h2>
               <div className="flex flex-col items-center">
                 <p className={`font-bold text-2xl mb-4 text-center ${
                   prediction.prediction.includes("high chances") 
