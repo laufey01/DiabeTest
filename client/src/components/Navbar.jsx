@@ -87,17 +87,8 @@ const Navbar = () => {
             <NavLink to="/" onClick={closeMenu}>
               Home
             </NavLink>
-            <NavLink to="/data-info" onClick={closeMenu}>
-              Data Info
-            </NavLink>
             <NavLink to="/prediction" onClick={closeMenu}>
               Prediction
-            </NavLink>
-            <NavLink to="/visualization" onClick={closeMenu}>
-              Visualization
-            </NavLink>
-            <NavLink to="/contact" onClick={closeMenu}>
-              Contact Us
             </NavLink>
             <NavLink to="/FAQ" onClick={closeMenu}>
               FAQ
