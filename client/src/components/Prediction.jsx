@@ -29,7 +29,7 @@ const Prediction = () => {
     Age: "Normal range: Any age can be affected, but risk increases after 45 years",
     Pregnancies: "Normal range: 0-5 (for women), but higher numbers may indicate increased risk",
     Glucose: "Normal range: 70-99 mg/dL (fasting), <140 mg/dL (2 hours after eating)",
-    BloodPressure: "Normal range: <120/80 mmHg (optimal), 120-129/<80 mmHg (elevated)",
+    BloodPressure: "Normal range: <80 mmHg (diastolic, optimal), 80-89 mmHg (elevated/hypertension)",
     Insulin: "Normal range: 2-25 μU/mL (fasting)",
     BMI: "Normal range: 18.5-24.9 (healthy weight), 25-29.9 (overweight), 30+ (obese)",
     SkinThickness: "Normal range: 10-40 mm (varies by age, gender, and body composition)",
