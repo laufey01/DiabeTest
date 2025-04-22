@@ -11,7 +11,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 scaler_path = os.path.join(script_dir, 'scaler.pkl')
 scaler = pkl.load(open(scaler_path, 'rb'))
 
-file_path = os.path.join(script_dir, 'nb.pkl')
+file_path = os.path.join(script_dir, 'best_rf_model.pkl')
 with open(file_path, 'rb') as f:
     model = pkl.load(f)
 
