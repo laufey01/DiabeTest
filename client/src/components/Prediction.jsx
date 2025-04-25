@@ -55,7 +55,7 @@ const Prediction = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "https://diabetest.onrender.com/predict",
+        "http://127.0.0.1:8000/predict",
         userInput
       );
       setPrediction(response.data);
@@ -64,7 +64,7 @@ const Prediction = () => {
       setPrediction({ 
         prediction: "An error occurred. Please try again.", 
         probability: "",
-        donut_chart: null
+        risk_level: 'error'
       });
     } finally {
       setIsLoading(false);
@@ -117,6 +117,52 @@ const Prediction = () => {
 
   const handleBlur = () => {
     setCurrentTooltip("");
+  };
+
+  const getRiskColor = (riskLevel) => {
+    switch (riskLevel) {
+      case 'high':
+        return 'text-red-600';
+      case 'borderline':
+        return 'text-orange-500';
+      case 'moderate':
+        return 'text-yellow-600';
+      case 'low':
+        return 'text-green-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  const getRiskIcon = (riskLevel) => {
+    switch (riskLevel) {
+      case 'high':
+        return (
+          <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        );
+      case 'borderline':
+        return (
+          <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        );
+      case 'moderate':
+        return (
+          <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        );
+      case 'low':
+        return (
+          <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+          </svg>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -232,7 +278,7 @@ const Prediction = () => {
           className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8 sm:p-6 md:p-8 w-full sm:w-auto"
         >
           <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
-            Enter Parameter
+            Enter all details
           </h1>
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -537,52 +583,57 @@ const Prediction = () => {
           )}
           {prediction && !isLoading && (
             <div className="bg-white p-6 rounded-lg shadow-lg mx-4 sm:mx-0 mt-4 sm:mt-0 w-full max-w-3xl">
-              <h2 className="text-2xl font-bold text-blue-600 mb-4 text-center">Prediction Result</h2>
+              <h2 className="text-2xl font-bold text-gray-600 mb-4 text-center">Prediction Result</h2>
               <div className="flex flex-col items-center">
-                <p className={`font-bold text-2xl mb-4 text-center ${
-                  prediction.prediction.includes("high chances") 
-                    ? "text-red-600" 
-                    : "text-green-600"
-                }`}>
-                  {prediction.prediction || "No prediction available"}
-                </p>
-                
-                {prediction.donut_chart && (
-                  <div className="mb-6 w-64 h-64 flex items-center justify-center">
-                    <img 
-                      src={prediction.donut_chart} 
-                      alt="Probability donut chart" 
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                )}
-                
-                <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-                  <div 
-                    className={`h-4 rounded-full ${
-                      prediction.probability > 50 
-                        ? "bg-red-500" 
-                        : "bg-green-500"
-                    }`} 
-                    style={{ width: `${prediction.probability}%` }}
-                  ></div>
+                <div className="flex items-center mb-4">
+                  {getRiskIcon(prediction.risk_level)}
+                  <p className={`font-bold text-2xl ml-2 ${getRiskColor(prediction.risk_level)}`}>
+                    {prediction.prediction || "No prediction available"}
+                  </p>
                 </div>
                 
-                <p className="text-lg font-medium text-gray-700">
-                  Probability: <span className="font-bold">{prediction.probability}%</span>
-                </p>
+                {/* Show probability visualization for moderate, borderline, and high risk */}
+                {(prediction.risk_level === 'moderate' || prediction.risk_level === 'borderline' || prediction.risk_level === 'high') && (
+                  <>
+                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                      <div 
+                        className={`h-4 rounded-full ${
+                          prediction.risk_level === 'high' ? 'bg-red-500' :
+                          prediction.risk_level === 'borderline' ? 'bg-orange-500' :
+                          'bg-yellow-500'
+                        }`} 
+                        style={{ width: `${prediction.probability}%` }}
+                      ></div>
+                    </div>
+                    
+                    <p className="text-lg font-medium text-gray-700 mb-4">
+                      Probability: <span className="font-bold">{prediction.probability}%</span>
+                    </p>
+                  </>
+                )}
                 
-                <div className="mt-6 text-center text-gray-700">
+                <div className="mt-4 text-center text-gray-700">
                   <p className="mb-2">
-                    {prediction.prediction.includes("high chances") ? (
+                    {prediction.risk_level === 'high' ? (
                       <>
-                        <span className="font-semibold">Recommendation:</span> Please consult with a healthcare professional for further evaluation and guidance.
+                        <span className="font-semibold">Recommendation:</span> Please consult with a healthcare professional immediately for further evaluation and guidance. Early intervention is crucial.
+                      </>
+                    ) : prediction.risk_level === 'borderline' ? (
+                      <>
+                        <span className="font-semibold">Recommendation:</span> You're at borderline risk. Consider lifestyle changes and schedule a checkup with your doctor for further assessment.
+                      </>
+                    ) : prediction.risk_level === 'moderate' ? (
+                      <>
+                        <span className="font-semibold">Recommendation:</span> Some risk factors present. Maintain a healthy lifestyle and consider regular health screenings.
                       </>
                     ) : (
                       <>
                         <span className="font-semibold">Recommendation:</span> Continue maintaining a healthy lifestyle with balanced diet and regular exercise.
                       </>
                     )}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-4">
+                    Note: This prediction is based on statistical analysis and should not replace professional medical advice.
                   </p>
                 </div>
               </div>
