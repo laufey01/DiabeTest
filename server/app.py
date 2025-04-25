@@ -22,26 +22,36 @@ def predict(Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, Bmi, Dp
     scaled_data = scaler.transform(input_data)
   
     # Get prediction and probabilities
-    prediction = model.predict(scaled_data)[0]
     probabilities = model.predict_proba(scaled_data)
     prob_percent = round(probabilities[0][1] * 100, 2)
 
-    if prediction == 1:
+    # Determine risk level based on probability
+    if prob_percent >= 50:
         result = {
             'prediction': "You have high chances of Diabetes!",
-            'probability': prob_percent
+            'probability': f"{prob_percent}%",
+            'risk_level': 'high'
         }
-    else:
+    elif 47 <= prob_percent <= 49:
         result = {
-            'prediction': "You have low chances of Diabetes.",
-            'probability': prob_percent
+            'prediction': "Borderline risk of Diabetes",
+            'probability': f"{prob_percent}%",
+            'risk_level': 'borderline'
+        }
+    elif 21 <= prob_percent <= 46:
+        result = {
+            'prediction': "You have some risk of Diabetes",
+            'probability': f"{prob_percent}%",
+            'risk_level': 'moderate'
+        }
+    else:  # prob_percent < 21
+        result = {
+            'prediction': "You have low chances of Diabetes",
+            'risk_level': 'low'
+            # No probability shown for low risk
         }
     
     return result
-
-@app.route('/')
-def home():
-    return "🩺 SugarSafe API is live. Use the /predict endpoint to POST your data."
 
 @app.route('/predict', methods=['POST'])
 def predictions():
@@ -61,7 +71,7 @@ def predictions():
         result = predict(Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, Bmi, Dpf, Age, HrsSleep, Cholesterol)
         return jsonify(result)
     
-    return "Invalid request method"
+    return jsonify({"error": "Invalid request method"}), 405
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
