@@ -55,7 +55,7 @@ const Prediction = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "https://diabetest.onrender.com/predict",
+        "http://127.0.0.1:8000/predict",
         userInput
       );
       setPrediction(response.data);
@@ -582,63 +582,72 @@ const Prediction = () => {
             </div>
           )}
           {prediction && !isLoading && (
-            <div className="bg-white p-6 rounded-lg shadow-lg mx-4 sm:mx-0 mt-4 sm:mt-0 w-full max-w-3xl">
-              <h2 className="text-2xl font-bold text-gray-600 mb-4 text-center">Prediction Result</h2>
-              <div className="flex flex-col items-center">
-                <div className="flex items-center mb-4">
-                  {getRiskIcon(prediction.risk_level)}
-                  <p className={`font-bold text-2xl ml-2 ${getRiskColor(prediction.risk_level)}`}>
-                    {prediction.prediction || "No prediction available"}
+          <div className="bg-white p-6 rounded-lg shadow-lg mx-4 sm:mx-0 mt-4 sm:mt-0 w-full max-w-3xl">
+            <h2 className="text-2xl font-bold text-gray-600 mb-4 text-center">Prediction Result</h2>
+            <div className="flex flex-col items-center">
+              <div className="flex items-center mb-4">
+                {getRiskIcon(prediction.risk_level)}
+                <p className={`font-bold text-2xl ml-2 ${getRiskColor(prediction.risk_level)}`}>
+                  {prediction.prediction || "No prediction available"}
+                </p>
+              </div>
+              
+              {/* Show probability visualization for moderate, borderline, and high risk */}
+              {(prediction.risk_level === 'moderate' || prediction.risk_level === 'borderline' || prediction.risk_level === 'high') && (
+                <>
+                  <div className="w-full relative bg-gray-200 rounded-full h-4 mb-4">
+                    <div 
+                      className={`h-4 rounded-full absolute ${
+                        prediction.risk_level === 'high' ? 'bg-red-500' :
+                        prediction.risk_level === 'borderline' ? 'bg-orange-500' :
+                        'bg-yellow-500'
+                      }`} 
+                      style={{ 
+                        width: `${parseFloat(prediction.probability)}%`,
+                        maxWidth: '100%' 
+                      }}
+                    ></div>
+                    {/* Add markers for better visualization */}
+                    <div className="absolute left-0 top-0 h-4 w-px bg-gray-400"></div>
+                    <div className="absolute left-1/4 top-0 h-4 w-px bg-gray-400"></div>
+                    <div className="absolute left-1/2 top-0 h-4 w-px bg-gray-400"></div>
+                    <div className="absolute left-3/4 top-0 h-4 w-px bg-gray-400"></div>
+                    <div className="absolute right-0 top-0 h-4 w-px bg-gray-400"></div>
+                  </div>
+                  
+                  <p className="text-lg font-medium text-gray-700 mb-4">
+                    Probability: <span className="font-bold">{prediction.probability}%</span>
                   </p>
-                </div>
-                
-                {/* Show probability visualization for moderate, borderline, and high risk */}
-                {(prediction.risk_level === 'moderate' || prediction.risk_level === 'borderline' || prediction.risk_level === 'high') && (
-                  <>
-                    <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-                      <div 
-                        className={`h-4 rounded-full ${
-                          prediction.risk_level === 'high' ? 'bg-red-500' :
-                          prediction.risk_level === 'borderline' ? 'bg-orange-500' :
-                          'bg-yellow-500'
-                        }`} 
-                        style={{ width: `${prediction.probability}%` }}
-                      ></div>
-                    </div>
-                    
-                    <p className="text-lg font-medium text-gray-700 mb-4">
-                      Probability: <span className="font-bold">{prediction.probability}%</span>
-                    </p>
-                  </>
-                )}
-                
-                <div className="mt-4 text-center text-gray-700">
-                  <p className="mb-2">
-                    {prediction.risk_level === 'high' ? (
-                      <>
-                        <span className="font-semibold">Recommendation:</span> Please consult with a healthcare professional immediately for further evaluation and guidance. Early intervention is crucial.
-                      </>
-                    ) : prediction.risk_level === 'borderline' ? (
-                      <>
-                        <span className="font-semibold">Recommendation:</span> You're at borderline risk. Consider lifestyle changes and schedule a checkup with your doctor for further assessment.
-                      </>
-                    ) : prediction.risk_level === 'moderate' ? (
-                      <>
-                        <span className="font-semibold">Recommendation:</span> Some risk factors present. Maintain a healthy lifestyle and consider regular health screenings.
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-semibold">Recommendation:</span> Continue maintaining a healthy lifestyle with balanced diet and regular exercise.
-                      </>
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-4">
-                    Note: This prediction is based on statistical analysis and should not replace professional medical advice.
-                  </p>
-                </div>
+                </>
+              )}
+              
+              <div className="mt-4 text-center text-gray-700">
+                <p className="mb-2">
+                  {prediction.risk_level === 'high' ? (
+                    <>
+                      <span className="font-semibold">Recommendation:</span> Please consult with a healthcare professional immediately for further evaluation and guidance. Early intervention is crucial.
+                    </>
+                  ) : prediction.risk_level === 'borderline' ? (
+                    <>
+                      <span className="font-semibold">Recommendation:</span> You're at borderline risk. Consider lifestyle changes and schedule a checkup with your doctor for further assessment.
+                    </>
+                  ) : prediction.risk_level === 'moderate' ? (
+                    <>
+                      <span className="font-semibold">Recommendation:</span> Some risk factors present. Maintain a healthy lifestyle and consider regular health screenings.
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-semibold">Recommendation:</span> Continue maintaining a healthy lifestyle with balanced diet and regular exercise.
+                    </>
+                  )}
+                </p>
+                <p className="text-sm text-gray-500 mt-4">
+                  Note: This prediction is based on statistical analysis and should not replace professional medical advice.
+                </p>
               </div>
             </div>
-          )}
+          </div>
+        )}
         </motion.div>
       </div>
     </div>
